@@ -1,6 +1,10 @@
 # Climate Ecosystem Assistant
 
-The Climate Ecosystem Assistant (CEA) is a comprehensive AI-powered platform designed to connect job seekers with climate economy opportunities in Massachusetts. Built using Next.js, LangGraph, LangChain, and DeepSeek AI, this application provides personalized career guidance, resume analysis, and ecosystem navigation for the clean energy sector.
+## Project Overview
+
+The Climate Ecosystem Assistant (CEA) is a comprehensive AI-powered platform designed to bridge the gap between job seekers and opportunities within the burgeoning Massachusetts climate economy. Leveraging advanced AI agents and a robust technology stack, the CEA aims to provide equitable access to resources, personalized career guidance, and seamless navigation of the clean energy sector for diverse user groups, including veterans, international professionals, and residents of Environmental Justice communities.
+
+*Note: This project is currently under active development.*
 
 ## Features
 
@@ -15,9 +19,10 @@ The Climate Ecosystem Assistant (CEA) is a comprehensive AI-powered platform des
 - **Frontend**: Next.js, React, Tailwind CSS, DaisyUI
 - **Backend**: Python, LangGraph, LangChain, FastAPI
 - **AI**: DeepSeek AI models
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase (PostgreSQL for relational data), AstraDB (Cassandra for vector data/knowledge base)
 - **Caching**: Redis
 - **Authentication**: JWT with Supabase Auth
+- **Deployment**: Vercel
 
 ## Getting Started
 
