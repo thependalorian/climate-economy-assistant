@@ -9,10 +9,10 @@
 
 // @ts-expect-error - Deno import compatibility
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from '@supabase/supabase-js';
-import { StateGraph, Annotation, START, END } from '@langchain/langgraph';
-import { ChatOpenAI } from '@langchain/openai';
-import { MemorySaver } from '@langchain/langgraph/checkpoint/memory';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { StateGraph, Annotation, START, END } from 'https://esm.sh/@langchain/langgraph@0.2.34';
+import { ChatOpenAI } from 'https://esm.sh/@langchain/openai@0.3.11';
+import { MemorySaver } from 'https://esm.sh/@langchain/langgraph@0.2.34';
 
 // Deno type declaration for Edge Functions
 declare const Deno: {
