@@ -1,0 +1,249 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black flake8 bandit safety
+          
+      - name: Run linters
+        run: |
+          black --check .
+          flake8 .
+          
+      - name: Security scan
+        run: |
+          bandit -r .
+          safety check
+
+  build:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Next.js application
+        run: npm run build
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/joinact/climate-assistant-frontend:${{ github.sha }}
+          
+      - name: Build and push backend
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/joinact/climate-assistant-backend:${{ github.sha }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+          
+      - name: Set up test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 10  # Give services time to start
+          
+      - name: Run unit tests
+        run: python -m pytest tests/unit --cov=app
+        
+      - name: Run integration tests
+        run: python -m pytest tests/integration
+        
+      - name: Run security tests
+        run: python -m pytest tests/security
+        
+      - name: Run scalability tests
+        run: python -m pytest tests/scalability
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            coverage.xml
+            test-report.html
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/owasp-top-ten
+          output: semgrep-results.sarif
+          
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: semgrep-results.sarif
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety
+          
+      - name: Check dependencies
+        run: safety check -r requirements.txt
+        
+      - name: Build image for scanning
+        run: docker build -t climate-assistant:${{ github.sha }} -f docker/backend/Dockerfile .
+        
+      - name: Scan image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: climate-assistant:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+
+  load-test:
+    if: github.event_name != 'pull_request'
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install k6
+        run: |
+          curl -L https://github.com/grafana/k6/releases/download/v0.42.0/k6-v0.42.0-linux-amd64.tar.gz | tar xz
+          sudo cp k6-v0.42.0-linux-amd64/k6 /usr/local/bin
+          
+      - name: Set up test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 30  # Give services time to start
+          
+      - name: Run load test
+        run: k6 run tests/load/k6-load-test.js
+        
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: load-test-summary.json
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    needs: [test, security-scan, load-test]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Deploy to staging
+        run: |
+          terraform -chdir=./terraform/staging init
+          terraform -chdir=./terraform/staging apply -auto-approve -var="image_tag=${{ github.sha }}"
+          
+      - name: Run post-deployment tests
+        run: |
+          sleep 60  # Wait for deployment to stabilize
+          python -m pytest tests/post_deployment
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: [test, security-scan, load-test]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Deploy to production
+        run: |
+          terraform -chdir=./terraform/production init
+          terraform -chdir=./terraform/production apply -auto-approve -var="image_tag=${{ github.sha }}"
+          
+      - name: Run post-deployment tests
+        run: |
+          sleep 60  # Wait for deployment to stabilize
+          python -m pytest tests/post_deployment
+          
+      - name: Verify deployment
+        run: |
+          curl -s https://climate-assistant.joinact.org/health | grep "ok"
