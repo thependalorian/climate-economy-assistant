@@ -4,7 +4,6 @@ import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 // import { OnboardingRedirect } from './components/auth/OnboardingRedirect';
 import { AuthCallback } from './components/auth/AuthCallback';
-import { QuickAuthCheck } from './components/auth/QuickAuthCheck';
 import { SimpleRedirect } from './components/auth/SimpleRedirect';
 import { AuthRedirect } from './components/auth/AuthRedirect';
 import { useAuth } from './hooks/useAuth';
