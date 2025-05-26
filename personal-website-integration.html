@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Website Integration - CEA Platform</title>
+    <style>
+        /* Example styles for integration */
+        .project-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .project-links {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .project-tags span {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .navigation {
+            display: flex;
+            gap: 2rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .navigation a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .navigation a:hover {
+            color: #667eea;
+        }
+        
+        .navigation a.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .cea-highlight {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+        
+        <!-- Navigation Integration Example -->
+        <nav class="navigation">
+            <a href="/">Home</a>
+            <a href="/experience">Experience</a>
+            <a href="/projects" class="active">Projects</a>
+            <a href="https://cea.georgenekwaya.com" target="_blank">
+                CEA Platform
+                <span class="cea-highlight">NEW</span>
+            </a>
+            <a href="/certificates">Certificates</a>
+            <a href="/namibia">Namibia</a>
+            <a href="/buffr">Buffr</a>
+        </nav>
+
+        <h1>Projects Integration Example</h1>
+        
+        <!-- Featured CEA Project Card -->
+        <div class="project-card" style="border: 2px solid #4facfe;">
+            <h3 style="color: #2d3748; margin-bottom: 1rem; font-size: 1.5rem;">
+                🌍 Climate Economy Assistant (CEA)
+                <span style="background: #4facfe; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">FEATURED</span>
+            </h3>
+            
+            <p style="color: #4a5568; line-height: 1.6; margin-bottom: 1.5rem;">
+                AI-powered platform connecting job seekers with climate economy opportunities through intelligent matching and personalized guidance. 
+                Built with React, TypeScript, and advanced AI agents to revolutionize climate career discovery.
+            </p>
+            
+            <div class="project-links">
+                <a href="https://cea.georgenekwaya.com" class="btn-primary" target="_blank" onclick="trackCEAVisit()">
+                    🚀 Launch Platform
+                </a>
+                <a href="https://cea.georgenekwaya.com/about" class="btn-secondary" target="_blank">
+                    📖 Learn More
+                </a>
+            </div>
+            
+            <div class="project-tags">
+                <span>🤖 AI/ML</span>
+                <span>🌱 Climate Tech</span>
+                <span>💼 Job Matching</span>
+                <span>⚛️ React</span>
+                <span>📘 TypeScript</span>
+                <span>🗄️ Supabase</span>
+                <span>🎨 Tailwind CSS</span>
+            </div>
+            
+            <!-- Key Features -->
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                <h4 style="color: #2d3748; margin-bottom: 0.75rem;">Key Features:</h4>
+                <ul style="color: #4a5568; line-height: 1.6;">
+                    <li>🎯 AI-powered job matching for climate economy roles</li>
+                    <li>💬 Intelligent chat interface with specialized career agents</li>
+                    <li>📄 Resume analysis and skills extraction</li>
+                    <li>🏢 Partner dashboard for organizations</li>
+                    <li>👨‍💼 Admin panel for platform management</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Other Projects -->
+        <div class="project-card">
+            <h3 style="color: #2d3748; margin-bottom: 1rem;">Buffr Inc.</h3>
+            <p style="color: #4a5568; line-height: 1.6; margin-bottom: 1.5rem;">
+                Digital financial inclusion solutions inspired by India's UPI success, building instant payment infrastructure 
+                to improve financial accessibility in emerging markets.
+            </p>
+            <div class="project-links">
+                <a href="/buffr" class="btn-primary">View Details</a>
+                <a href="mailto:george@buffr.ai" class="btn-secondary">Contact</a>
+            </div>
+            <div class="project-tags">
+                <span>💳 FinTech</span>
+                <span>🌍 Emerging Markets</span>
+                <span>💰 Digital Payments</span>
+                <span>🏆 Award Winner</span>
+            </div>
+        </div>
+
+        <!-- Analytics Tracking Script -->
+        <script>
+            // Google Analytics tracking for CEA visits
+            function trackCEAVisit() {
+                // Replace with your actual Google Analytics tracking ID
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'cea_platform_visit', {
+                        'event_category': 'external_link',
+                        'event_label': 'cea_platform',
+                        'value': 1,
+                        'custom_map': {
+                            'source_page': 'projects'
+                        }
+                    });
+                }
+                
+                // Optional: Track in console for development
+                console.log('CEA Platform visit tracked from projects page');
+            }
+
+            // Track page views
+            if (typeof gtag !== 'undefined') {
+                gtag('config', 'GA_MEASUREMENT_ID', {
+                    'linker': {
+                        'domains': ['georgenekwaya.com', 'cea.georgenekwaya.com']
+                    }
+                });
+            }
+        </script>
+
+        <!-- SEO and Social Meta Tags Example -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Climate Economy Assistant",
+            "description": "AI-powered platform connecting job seekers with climate economy opportunities",
+            "url": "https://cea.georgenekwaya.com",
+            "author": {
+                "@type": "Person",
+                "name": "George Nekwaya",
+                "url": "https://georgenekwaya.com"
+            },
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }
+        }
+        </script>
+
+        <!-- Integration Notes -->
+        <div style="margin-top: 3rem; padding: 2rem; background: #f7fafc; border-radius: 8px; border-left: 4px solid #4facfe;">
+            <h3 style="color: #2d3748; margin-bottom: 1rem;">🔧 Integration Notes</h3>
+            <ul style="color: #4a5568; line-height: 1.6;">
+                <li><strong>Domain:</strong> cea.georgenekwaya.com</li>
+                <li><strong>SSL:</strong> Automatic via Vercel</li>
+                <li><strong>Analytics:</strong> Cross-domain tracking configured</li>
+                <li><strong>SEO:</strong> Structured data and meta tags optimized</li>
+                <li><strong>Performance:</strong> Optimized for fast loading</li>
+                <li><strong>Mobile:</strong> Fully responsive design</li>
+            </ul>
+        </div>
+
+        <!-- Call to Action -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+            <h3 style="margin-bottom: 1rem;">Ready to Explore Climate Careers?</h3>
+            <p style="margin-bottom: 1.5rem; opacity: 0.9;">
+                Join thousands of professionals discovering opportunities in the climate economy
+            </p>
+            <a href="https://cea.georgenekwaya.com" 
+               style="background: white; color: #667eea; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; transition: transform 0.3s ease;"
+               onmouseover="this.style.transform='translateY(-2px)'"
+               onmouseout="this.style.transform='translateY(0)'"
+               onclick="trackCEAVisit()">
+                🌍 Launch CEA Platform
+            </a>
+        </div>
+
+    </div>
+</body>
+</html> 

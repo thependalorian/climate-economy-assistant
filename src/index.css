@@ -1,0 +1,382 @@
+/* ACT Brand Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ACT Brand Base Styles */
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', ui-sans-serif, system-ui;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @supports (font-variation-settings: normal) {
+    html {
+      font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui;
+    }
+  }
+
+  body {
+    @apply bg-sand-gray-50 text-midnight-forest antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* ACT Brand Typography Hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-midnight-forest;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 400; /* Helvetica Regular */
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+    font-weight: 300; /* Helvetica Light for large headings */
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+    font-weight: 300;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+    font-weight: 400;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl lg:text-3xl;
+    font-weight: 400;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl lg:text-2xl;
+    font-weight: 500;
+  }
+
+  h6 {
+    @apply text-base md:text-lg lg:text-xl;
+    font-weight: 500;
+  }
+
+  /* ACT Brand Body Text */
+  p, li, span {
+    @apply font-body text-midnight-forest;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    font-weight: 400;
+  }
+
+  /* ACT Brand Links */
+  a {
+    @apply text-spring-green hover:text-moss-green transition-colors duration-200;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-underline-offset: 0.125em;
+  }
+}
+
+@layer components {
+  /* ACT Brand Button Styles */
+  .btn-primary {
+    @apply bg-spring-green text-midnight-forest font-medium px-act-lg py-act-sm rounded-act;
+    @apply hover:bg-spring-green-600 focus:outline-none focus:ring-2 focus:ring-spring-green-500/20;
+    @apply transition-all duration-200 ease-in-out;
+    @apply border-none shadow-sm hover:shadow-md;
+    letter-spacing: -0.02em;
+  }
+
+  .btn-secondary {
+    @apply bg-moss-green text-white font-medium px-act-lg py-act-sm rounded-act;
+    @apply hover:bg-moss-green-700 focus:outline-none focus:ring-2 focus:ring-moss-green-500/20;
+    @apply transition-all duration-200 ease-in-out;
+    @apply border-none shadow-sm hover:shadow-md;
+    letter-spacing: -0.02em;
+  }
+
+  .btn-outline {
+    @apply border-2 border-spring-green text-spring-green font-medium px-act-lg py-act-sm rounded-act;
+    @apply hover:bg-spring-green hover:text-midnight-forest focus:outline-none focus:ring-2 focus:ring-spring-green-500/20;
+    @apply transition-all duration-200 ease-in-out;
+    @apply bg-transparent shadow-sm hover:shadow-md;
+    letter-spacing: -0.02em;
+  }
+
+  .btn-ghost {
+    @apply text-midnight-forest font-medium px-act-lg py-act-sm rounded-act;
+    @apply hover:bg-sand-gray-200 focus:outline-none focus:ring-2 focus:ring-spring-green-500/20;
+    @apply transition-all duration-200 ease-in-out;
+    @apply bg-transparent border-none;
+    letter-spacing: -0.02em;
+  }
+
+  /* ACT Brand Card Styles */
+  .card {
+    @apply overflow-hidden rounded-act-lg border border-sand-gray-300 bg-white shadow-sm;
+    @apply transition-all duration-200 ease-in-out;
+    @apply hover:shadow-md hover:border-sand-gray-400;
+  }
+
+  .card-title {
+    @apply font-display text-midnight-forest font-medium;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .card-body {
+    @apply p-act-lg;
+  }
+
+  /* ACT Brand Form Elements */
+  .input {
+    @apply block w-full rounded-act border border-sand-gray-400 bg-white px-act-sm py-act-sm;
+    @apply text-midnight-forest placeholder-midnight-forest-400 font-body;
+    @apply focus:border-spring-green focus:outline-none focus:ring-2 focus:ring-spring-green/20;
+    @apply disabled:pointer-events-none disabled:opacity-50 disabled:bg-sand-gray-100;
+    @apply transition-all duration-200 ease-in-out;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .select {
+    @apply block w-full rounded-act border border-sand-gray-400 bg-white px-act-sm py-act-sm;
+    @apply text-midnight-forest font-body;
+    @apply focus:border-spring-green focus:outline-none focus:ring-2 focus:ring-spring-green/20;
+    @apply disabled:pointer-events-none disabled:opacity-50 disabled:bg-sand-gray-100;
+    @apply transition-all duration-200 ease-in-out;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .textarea {
+    @apply block w-full rounded-act border border-sand-gray-400 bg-white px-act-sm py-act-sm;
+    @apply text-midnight-forest placeholder-midnight-forest-400 font-body;
+    @apply focus:border-spring-green focus:outline-none focus:ring-2 focus:ring-spring-green/20;
+    @apply disabled:pointer-events-none disabled:opacity-50 disabled:bg-sand-gray-100;
+    @apply transition-all duration-200 ease-in-out resize-y;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  /* ACT Brand Badge Styles */
+  .badge {
+    @apply inline-flex items-center rounded-full px-act-sm py-act-xs text-xs font-medium;
+    letter-spacing: 0em;
+  }
+
+  .badge-primary {
+    @apply badge bg-spring-green-100 text-spring-green-800 border border-spring-green-200;
+  }
+
+  .badge-secondary {
+    @apply badge bg-moss-green-100 text-moss-green-800 border border-moss-green-200;
+  }
+
+  .badge-accent {
+    @apply badge bg-seafoam-blue-100 text-midnight-forest border border-seafoam-blue-200;
+  }
+
+  .badge-neutral {
+    @apply badge bg-sand-gray-200 text-midnight-forest border border-sand-gray-300;
+  }
+
+  /* ACT Brand Layout */
+  .container {
+    @apply mx-auto max-w-7xl px-act-md sm:px-act-lg lg:px-act-xl;
+  }
+
+  .section {
+    @apply py-act-2xl;
+  }
+
+  .section-sm {
+    @apply py-act-xl;
+  }
+
+  .section-lg {
+    @apply py-act-3xl;
+  }
+}
+
+/* ACT Brand Graphic Elements */
+
+/* ACT Logo Frame - Green border from logo */
+.act-frame {
+  @apply relative;
+  padding: 1rem;
+}
+
+.act-frame::before {
+  content: '';
+  @apply absolute inset-0 border-2 border-spring-green rounded-act-lg;
+  margin: -2px;
+  z-index: -1;
+}
+
+/* ACT Open Brackets - Signature graphic element */
+.act-bracket {
+  @apply relative;
+  padding: act-md;
+}
+
+.act-bracket::before,
+.act-bracket::after {
+  content: '';
+  @apply absolute border-spring-green;
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+.act-bracket::before {
+  @apply border-l border-t;
+  top: 0;
+  left: 0;
+}
+
+.act-bracket::after {
+  @apply border-r border-b;
+  bottom: 0;
+  right: 0;
+}
+
+/* ACT Bracket Variants */
+.act-bracket-sm::before,
+.act-bracket-sm::after {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.act-bracket-lg::before,
+.act-bracket-lg::after {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ACT Blur Background - For overlays */
+.act-blur-bg {
+  @apply relative overflow-hidden;
+}
+
+.act-blur-bg::before {
+  content: '';
+  @apply absolute inset-0 backdrop-blur-lg;
+  background: rgba(235, 233, 225, 0.8); /* Sand Gray with opacity */
+  z-index: -1;
+}
+
+/* ACT Hero Section Styling */
+.act-hero {
+  @apply relative overflow-hidden;
+  background: linear-gradient(135deg, #EBE9E1 0%, #E0FFFF 100%);
+}
+
+.act-hero::before {
+  content: '';
+  @apply absolute inset-0 opacity-10;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23001818' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ACT Section Dividers */
+.act-divider {
+  @apply relative my-act-2xl;
+}
+
+.act-divider::before {
+  content: '';
+  @apply absolute left-1/2 top-1/2 w-16 h-px bg-spring-green;
+  transform: translate(-50%, -50%);
+}
+
+.act-divider::after {
+  content: '';
+  @apply absolute left-1/2 top-1/2 w-2 h-2 bg-spring-green rounded-full;
+  transform: translate(-50%, -50%);
+}
+
+/* ACT Card Hover Effects */
+.act-card-hover {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.act-card-hover:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+.act-card-hover:hover .act-bracket::before,
+.act-card-hover:hover .act-bracket::after {
+  @apply border-moss-green;
+}
+
+/* ACT Focus States */
+.act-focus {
+  @apply focus:outline-none focus:ring-2 focus:ring-spring-green/20 focus:border-spring-green;
+}
+
+/* ACT Animation Classes */
+.act-fade-in {
+  animation: actFadeIn 0.6s ease-out forwards;
+}
+
+.act-slide-up {
+  animation: actSlideUp 0.6s ease-out forwards;
+}
+
+@keyframes actFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes actSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ACT Responsive Typography */
+@media (max-width: 640px) {
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+}
+
+/* ACT Print Styles */
+@media print {
+  .act-frame::before,
+  .act-bracket::before,
+  .act-bracket::after {
+    @apply border-black;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    @apply bg-transparent border border-black text-black;
+  }
+}

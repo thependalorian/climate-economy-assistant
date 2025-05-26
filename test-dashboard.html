@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Dashboard - Climate Ecosystem</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 10px; 
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #10b981;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .nav {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .nav button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .nav button.active {
+            background: #10b981;
+        }
+        .nav button:hover {
+            opacity: 0.8;
+        }
+        .content {
+            padding: 30px;
+            min-height: 400px;
+        }
+        .dashboard {
+            display: none;
+        }
+        .dashboard.active {
+            display: block;
+        }
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Climate Ecosystem Dashboard Test</h1>
+            <p>Testing role-based dashboard layouts without authentication</p>
+        </div>
+        
+        <div class="nav">
+            <button onclick="showDashboard('job_seeker')" id="btn-job_seeker">👤 Job Seeker Dashboard</button>
+            <button onclick="showDashboard('partner')" id="btn-partner">🏢 Partner Dashboard</button>
+            <button onclick="showDashboard('admin')" id="btn-admin">👑 Admin Dashboard</button>
+            <button onclick="testSupabase()" id="btn-test">🔧 Test Supabase</button>
+        </div>
+        
+        <div class="content">
+            <!-- Job Seeker Dashboard -->
+            <div id="dashboard-job_seeker" class="dashboard">
+                <h2>👤 Job Seeker Dashboard</h2>
+                <div class="card success">
+                    <h3>Welcome, Job Seeker!</h3>
+                    <p>This is what job seekers should see when they log in.</p>
+                    <ul>
+                        <li>✅ Job matches and recommendations</li>
+                        <li>✅ Training programs</li>
+                        <li>✅ Resume management</li>
+                        <li>✅ Skills assessment</li>
+                        <li>✅ Chat with AI assistant</li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h4>Navigation Items:</h4>
+                    <ul>
+                        <li>Dashboard (/dashboard)</li>
+                        <li>Search (/dashboard/search)</li>
+                        <li>Job Matches (/dashboard/jobs)</li>
+                        <li>Training (/dashboard/training)</li>
+                        <li>Resources (/dashboard/resources)</li>
+                        <li>Resume (/dashboard/resume)</li>
+                        <li>Profile (/dashboard/profile)</li>
+                        <li>Settings (/dashboard/settings)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Partner Dashboard -->
+            <div id="dashboard-partner" class="dashboard">
+                <h2>🏢 Partner Dashboard</h2>
+                <div class="card info">
+                    <h3>Welcome, Partner!</h3>
+                    <p>This is what partners should see when they log in.</p>
+                    <ul>
+                        <li>✅ Job posting management</li>
+                        <li>✅ Candidate pipeline</li>
+                        <li>✅ Program management</li>
+                        <li>✅ Analytics and reporting</li>
+                        <li>✅ Organization settings</li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h4>Navigation Items:</h4>
+                    <ul>
+                        <li>Dashboard (/partner-dashboard)</li>
+                        <li>Jobs (/partner-dashboard/jobs)</li>
+                        <li>Programs (/partner-dashboard/programs)</li>
+                        <li>Candidates (/partner-dashboard/candidates)</li>
+                        <li>Analytics (/partner-dashboard/analytics)</li>
+                        <li>Profile (/partner-dashboard/profile)</li>
+                        <li>Settings (/partner-dashboard/settings)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Admin Dashboard -->
+            <div id="dashboard-admin" class="dashboard">
+                <h2>👑 Admin Dashboard</h2>
+                <div class="card warning">
+                    <h3>Welcome, Admin!</h3>
+                    <p>This is what admins should see when they log in.</p>
+                    <ul>
+                        <li>✅ User management</li>
+                        <li>✅ System analytics</li>
+                        <li>✅ Content moderation</li>
+                        <li>✅ Platform configuration</li>
+                        <li>✅ Support tools</li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h4>Navigation Items:</h4>
+                    <ul>
+                        <li>Dashboard (/admin-dashboard)</li>
+                        <li>Users (/admin-dashboard/users)</li>
+                        <li>Analytics (/admin-dashboard/analytics)</li>
+                        <li>Content (/admin-dashboard/content)</li>
+                        <li>Settings (/admin-dashboard/settings)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Test Results -->
+            <div id="dashboard-test" class="dashboard">
+                <h2>🔧 Supabase Connection Test</h2>
+                <div id="test-results" class="card">
+                    <p>Click "Test Supabase" to check your connection...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        function showDashboard(type) {
+            // Hide all dashboards
+            const dashboards = document.querySelectorAll('.dashboard');
+            dashboards.forEach(d => d.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.nav button');
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            // Show selected dashboard
+            document.getElementById(`dashboard-${type}`).classList.add('active');
+            document.getElementById(`btn-${type}`).classList.add('active');
+            
+            console.log(`🎯 Showing ${type} dashboard`);
+        }
+        
+        async function testSupabase() {
+            showDashboard('test');
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>🔄 Testing Supabase connection...</p>';
+            
+            try {
+                const supabaseUrl = 'https://kvtkpguwoaqokcylzpic.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dGtwZ3V3b2Fxb2tjeWx6cGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTY0NDgsImV4cCI6MjA2MzU3MjQ0OH0.tmAmsWiqhJn4ceG3d_-RpXt7oSMNpcTUOei-igqu1Ps';
+                
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // Test with timeout
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000);
+                });
+                
+                const sessionPromise = supabase.auth.getSession();
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+                
+                resultsDiv.innerHTML = `
+                    <h3>✅ Connection Successful!</h3>
+                    <p><strong>Session:</strong> ${result.data.session ? 'Active session found' : 'No active session'}</p>
+                    <p><strong>URL:</strong> ${supabaseUrl}</p>
+                    <p><strong>Status:</strong> Connected successfully</p>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <h3>❌ Connection Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>This might be why your app is stuck loading!</strong></p>
+                    <h4>Possible Solutions:</h4>
+                    <ul>
+                        <li>Check your internet connection</li>
+                        <li>Verify Supabase project is active</li>
+                        <li>Check if your IP is blocked</li>
+                        <li>Try using a VPN</li>
+                        <li>Check browser network tab for errors</li>
+                    </ul>
+                `;
+            }
+        }
+        
+        // Show job seeker dashboard by default
+        showDashboard('job_seeker');
+        
+        console.log('🚀 Dashboard test page loaded');
+        console.log('🎯 This shows what each user type should see');
+    </script>
+</body>
+</html>

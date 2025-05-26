@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Login Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Login Test</h1>
+    <div id="status">Testing connection...</div>
+    
+    <div id="login-form" style="margin-top: 20px;">
+        <h3>Test Login</h3>
+        <input type="email" id="email" placeholder="Email" style="display: block; margin: 5px 0; padding: 5px;">
+        <input type="password" id="password" placeholder="Password" style="display: block; margin: 5px 0; padding: 5px;">
+        <button onclick="testLogin()" style="padding: 5px 10px;">Test Login</button>
+        <button onclick="testSignup()" style="padding: 5px 10px;">Test Signup</button>
+    </div>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+
+    <script>
+        const supabaseUrl = 'https://kvtkpguwoaqokcylzpic.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dGtwZ3V3b2Fxb2tjeWx6cGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTY0NDgsImV4cCI6MjA2MzU3MjQ0OH0.tmAmsWiqhJn4ceG3d_-RpXt7oSMNpcTUOei-igqu1Ps';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function log(message) {
+            const results = document.getElementById('results');
+            results.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            console.log(message);
+        }
+        
+        async function testConnection() {
+            try {
+                log('🔄 Testing Supabase connection...');
+                
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log('❌ Connection error: ' + error.message);
+                    document.getElementById('status').textContent = 'Connection failed';
+                } else {
+                    log('✅ Connection successful');
+                    log('Session: ' + (data.session ? 'User logged in' : 'No active session'));
+                    document.getElementById('status').textContent = 'Connection successful';
+                }
+            } catch (err) {
+                log('❌ Unexpected error: ' + err.message);
+                document.getElementById('status').textContent = 'Connection failed';
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password');
+                return;
+            }
+            
+            try {
+                log('🔄 Attempting login...');
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log('❌ Login error: ' + error.message);
+                } else {
+                    log('✅ Login successful!');
+                    log('User: ' + JSON.stringify(data.user, null, 2));
+                }
+            } catch (err) {
+                log('❌ Unexpected login error: ' + err.message);
+            }
+        }
+        
+        async function testSignup() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password');
+                return;
+            }
+            
+            try {
+                log('🔄 Attempting signup...');
+                
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log('❌ Signup error: ' + error.message);
+                } else {
+                    log('✅ Signup successful!');
+                    log('User: ' + JSON.stringify(data.user, null, 2));
+                }
+            } catch (err) {
+                log('❌ Unexpected signup error: ' + err.message);
+            }
+        }
+        
+        // Test connection on page load
+        testConnection();
+    </script>
+</body>
+</html>

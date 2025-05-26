@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth Flow - Climate Ecosystem</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            box-sizing: border-box;
+        }
+        button { 
+            background: #10b981; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #059669; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .log { 
+            background: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        .profile { 
+            background: #ecfdf5; 
+            border: 1px solid #10b981; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Climate Ecosystem - Test Auth Flow</h1>
+        <p>This tool tests the authentication flow with our fixes.</p>
+        
+        <div>
+            <h3>📧 Test Authentication</h3>
+            <input type="email" id="email" placeholder="Email" value="test@example.com">
+            <input type="password" id="password" placeholder="Password" value="password123">
+            <select id="userType">
+                <option value="job_seeker">Job Seeker</option>
+                <option value="partner">Partner</option>
+                <option value="admin">Admin</option>
+            </select>
+            <div>
+                <button onclick="testSignup()" id="signupBtn">📝 Test Signup</button>
+                <button onclick="testLogin()" id="loginBtn">🔑 Test Login</button>
+                <button onclick="testSession()" id="sessionBtn">🔍 Check Session</button>
+                <button onclick="testProfile()" id="profileBtn">👤 Check Profile</button>
+                <button onclick="testLogout()" id="logoutBtn">🚪 Logout</button>
+                <button onclick="clearLogs()" id="clearBtn">🧹 Clear Logs</button>
+            </div>
+        </div>
+
+        <div id="profile" style="display: none;" class="profile">
+            <h3>👤 User Profile</h3>
+            <div id="profileData"></div>
+        </div>
+        
+        <div>
+            <h3>📋 Debug Logs</h3>
+            <div id="logs" class="log">Ready to test authentication flow...</div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://kvtkpguwoaqokcylzpic.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dGtwZ3V3b2Fxb2tjeWx6cGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTY0NDgsImV4cCI6MjA2MzU3MjQ0OH0.tmAmsWiqhJn4ceG3d_-RpXt7oSMNpcTUOei-igqu1Ps';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logs.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = 'Logs cleared...';
+            document.getElementById('profile').style.display = 'none';
+        }
+        
+        function setLoading(loading) {
+            const buttons = ['loginBtn', 'signupBtn', 'sessionBtn', 'logoutBtn', 'profileBtn'];
+            buttons.forEach(id => {
+                document.getElementById(id).disabled = loading;
+            });
+        }
+
+        // Profile Service Functions (matching our new service)
+        async function createUserProfile(data) {
+            try {
+                log(`📝 Creating user profile for: ${data.email} as ${data.user_type}`, 'info');
+                
+                const profileData = {
+                    id: data.id,
+                    email: data.email,
+                    user_type: data.user_type,
+                    first_name: data.first_name || null,
+                    last_name: data.last_name || null,
+                    organization_name: data.organization_name || null,
+                    organization_type: data.organization_type || null,
+                    profile_completed: false
+                };
+
+                const { error } = await supabase
+                    .from('user_profiles')
+                    .insert(profileData);
+
+                if (error) {
+                    if (error.code === '23505') {
+                        log('🔄 Profile exists, updating instead...', 'info');
+                        const { error: updateError } = await supabase
+                            .from('user_profiles')
+                            .update(profileData)
+                            .eq('id', data.id);
+                        
+                        if (updateError) {
+                            log(`❌ Error updating profile: ${updateError.message}`, 'error');
+                            return { success: false, error: updateError.message };
+                        }
+                    } else {
+                        log(`❌ Error creating profile: ${error.message}`, 'error');
+                        return { success: false, error: error.message };
+                    }
+                }
+
+                log('✅ User profile created/updated successfully', 'success');
+                return { success: true };
+            } catch (error) {
+                log(`❌ Unexpected error: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function createJobSeekerProfile(userId) {
+            try {
+                log(`📝 Creating job seeker profile for: ${userId}`, 'info');
+                
+                const { error } = await supabase
+                    .from('job_seeker_profiles')
+                    .insert({
+                        id: userId,
+                        onboarding_completed: false,
+                        onboarding_step: 1,
+                        barriers: [],
+                        interests: [],
+                        veteran: false,
+                        international_professional: false,
+                        ej_community_resident: false
+                    });
+
+                if (error) {
+                    if (error.code === '23505') {
+                        log('ℹ️ Job seeker profile already exists', 'info');
+                        return { success: true };
+                    }
+                    log(`❌ Error creating job seeker profile: ${error.message}`, 'error');
+                    return { success: false, error: error.message };
+                }
+
+                log('✅ Job seeker profile created successfully', 'success');
+                return { success: true };
+            } catch (error) {
+                log(`❌ Unexpected error: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function createPartnerProfile(userId, orgName, orgType) {
+            try {
+                log(`📝 Creating partner profile for: ${userId}`, 'info');
+                
+                const { error } = await supabase
+                    .from('partner_profiles')
+                    .insert({
+                        id: userId,
+                        organization_name: orgName || 'Test Organization',
+                        organization_type: orgType || 'employer',
+                        verified: false,
+                        partnership_level: 'standard',
+                        climate_focus: []
+                    });
+
+                if (error) {
+                    if (error.code === '23505') {
+                        log('ℹ️ Partner profile already exists', 'info');
+                        return { success: true };
+                    }
+                    log(`❌ Error creating partner profile: ${error.message}`, 'error');
+                    return { success: false, error: error.message };
+                }
+
+                log('✅ Partner profile created successfully', 'success');
+                return { success: true };
+            } catch (error) {
+                log(`❌ Unexpected error: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testSignup() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            log(`🔄 Testing signup for: ${email} as ${userType}`, 'info');
+            
+            try {
+                // Store user type in localStorage (like our app does)
+                localStorage.setItem('pendingUserType', userType);
+                
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/auth/callback`
+                    }
+                });
+                
+                if (error) {
+                    log(`❌ Signup failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Signup successful!', 'success');
+                    if (data.user) {
+                        log(`📧 User email: ${data.user.email}`, 'success');
+                        
+                        // Create profiles like our app does
+                        const profileResult = await createUserProfile({
+                            id: data.user.id,
+                            email: data.user.email,
+                            user_type: userType
+                        });
+                        
+                        if (profileResult.success) {
+                            if (userType === 'job_seeker') {
+                                await createJobSeekerProfile(data.user.id);
+                            } else if (userType === 'partner') {
+                                await createPartnerProfile(data.user.id, 'Test Organization', 'employer');
+                            }
+                        }
+                        
+                        await fetchUserProfile(data.user.id);
+                    }
+                }
+            } catch (err) {
+                log(`❌ Signup error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            log(`🔄 Testing login for: ${email} as ${userType}`, 'info');
+            
+            try {
+                // Store user type in localStorage (like our app does)
+                localStorage.setItem('pendingUserType', userType);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log(`❌ Login failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Login successful!', 'success');
+                    log(`📧 User email: ${data.user.email}`, 'success');
+                    await fetchUserProfile(data.user.id);
+                }
+            } catch (err) {
+                log(`❌ Login error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function testSession() {
+            setLoading(true);
+            log('🔄 Checking current session...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`❌ Session error: ${error.message}`, 'error');
+                } else if (data.session) {
+                    log('✅ Active session found!', 'success');
+                    log(`📧 User: ${data.session.user.email}`, 'success');
+                    await fetchUserProfile(data.session.user.id);
+                } else {
+                    log('ℹ️ No active session', 'info');
+                    document.getElementById('profile').style.display = 'none';
+                }
+            } catch (err) {
+                log(`❌ Session check error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function testProfile() {
+            setLoading(true);
+            log('🔄 Testing profile fetch...', 'info');
+            
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (!user) {
+                    log('❌ No authenticated user found', 'error');
+                    return;
+                }
+                
+                await fetchUserProfile(user.id);
+            } catch (err) {
+                log(`❌ Profile test error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function fetchUserProfile(userId) {
+            try {
+                log(`🔍 Fetching profile for user: ${userId}`, 'info');
+                
+                const { data: profile, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (error) {
+                    log(`❌ Profile fetch error: ${error.message}`, 'error');
+                    
+                    if (error.message.includes('infinite recursion')) {
+                        log('⚠️ RLS policy infinite recursion detected!', 'error');
+                        log('🔄 This is the issue we need to fix in the database', 'info');
+                    }
+                    
+                    document.getElementById('profile').style.display = 'none';
+                } else {
+                    log('✅ Profile fetched successfully', 'success');
+                    
+                    const profileDiv = document.getElementById('profile');
+                    const profileData = document.getElementById('profileData');
+                    
+                    profileData.innerHTML = `
+                        <strong>User Type:</strong> ${profile.user_type}<br>
+                        <strong>Email:</strong> ${profile.email}<br>
+                        <strong>Profile Completed:</strong> ${profile.profile_completed}<br>
+                        <strong>First Name:</strong> ${profile.first_name || 'Not set'}<br>
+                        <strong>Last Name:</strong> ${profile.last_name || 'Not set'}<br>
+                        <strong>Organization:</strong> ${profile.organization_name || 'Not set'}<br>
+                        <strong>Created:</strong> ${new Date(profile.created_at).toLocaleString()}
+                    `;
+                    
+                    profileDiv.style.display = 'block';
+                }
+            } catch (err) {
+                log(`❌ Unexpected profile error: ${err.message}`, 'error');
+            }
+        }
+        
+        async function testLogout() {
+            setLoading(true);
+            log('🔄 Testing logout...', 'info');
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) {
+                    log(`❌ Logout failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Logout successful!', 'success');
+                    document.getElementById('profile').style.display = 'none';
+                }
+            } catch (err) {
+                log(`❌ Logout error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+    </script>
+</body>
+</html> 

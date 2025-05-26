@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Browser Storage</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Clear Browser Storage for Climate Ecosystem App</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="clearAllStorage()">Clear All Storage</button>
+    <button onclick="clearSupabaseAuth()">Clear Supabase Auth Only</button>
+    <button onclick="showStorageInfo()">Show Current Storage</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap;"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'success' ? 'success' : 'info';
+            results.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+            console.log(message);
+        }
+        
+        function clearAllStorage() {
+            try {
+                // Clear localStorage
+                const localStorageKeys = Object.keys(localStorage);
+                localStorageKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                    log(`Removed localStorage: ${key}`);
+                });
+                
+                // Clear sessionStorage
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                sessionStorageKeys.forEach(key => {
+                    sessionStorage.removeItem(key);
+                    log(`Removed sessionStorage: ${key}`);
+                });
+                
+                log('✅ All storage cleared successfully!', 'success');
+                log('Please refresh your app now.', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing storage: ${error.message}`);
+            }
+        }
+        
+        function clearSupabaseAuth() {
+            try {
+                const keysToRemove = [];
+                
+                // Find Supabase auth keys
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('supabase') || key.includes('auth'))) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                // Remove Supabase keys
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    log(`Removed Supabase key: ${key}`);
+                });
+                
+                // Also check sessionStorage
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('supabase') || key.includes('auth'))) {
+                        sessionStorage.removeItem(key);
+                        log(`Removed sessionStorage key: ${key}`);
+                    }
+                }
+                
+                if (keysToRemove.length === 0) {
+                    log('No Supabase auth keys found');
+                } else {
+                    log('✅ Supabase auth cleared successfully!', 'success');
+                    log('Please refresh your app now.', 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Error clearing Supabase auth: ${error.message}`);
+            }
+        }
+        
+        function showStorageInfo() {
+            log('=== CURRENT STORAGE INFO ===');
+            
+            log('--- localStorage ---');
+            if (localStorage.length === 0) {
+                log('localStorage is empty');
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    log(`${key}: ${value ? value.substring(0, 100) + (value.length > 100 ? '...' : '') : 'null'}`);
+                }
+            }
+            
+            log('--- sessionStorage ---');
+            if (sessionStorage.length === 0) {
+                log('sessionStorage is empty');
+            } else {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    const value = sessionStorage.getItem(key);
+                    log(`${key}: ${value ? value.substring(0, 100) + (value.length > 100 ? '...' : '') : 'null'}`);
+                }
+            }
+            
+            log('=== END STORAGE INFO ===');
+        }
+        
+        // Show initial storage info
+        showStorageInfo();
+    </script>
+</body>
+</html>

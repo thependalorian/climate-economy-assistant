@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Login - Climate Ecosystem</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            box-sizing: border-box;
+        }
+        button { 
+            background: #10b981; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #059669; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .log { 
+            background: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        .profile { 
+            background: #ecfdf5; 
+            border: 1px solid #10b981; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Climate Ecosystem - Debug Login</h1>
+        <p>This tool helps debug your Supabase authentication without browser extension interference.</p>
+        
+        <div>
+            <h3>📧 Test Login</h3>
+            <input type="email" id="email" placeholder="Email" value="test@example.com">
+            <input type="password" id="password" placeholder="Password" value="password123">
+            <div>
+                <button onclick="testLogin()" id="loginBtn">🔑 Test Login</button>
+                <button onclick="testSignup()" id="signupBtn">📝 Test Signup</button>
+                <button onclick="testSession()" id="sessionBtn">🔍 Check Session</button>
+                <button onclick="testLogout()" id="logoutBtn">🚪 Logout</button>
+                <button onclick="clearLogs()" id="clearBtn">🧹 Clear Logs</button>
+            </div>
+        </div>
+
+        <div id="profile" style="display: none;" class="profile">
+            <h3>👤 User Profile</h3>
+            <div id="profileData"></div>
+        </div>
+        
+        <div>
+            <h3>📋 Debug Logs</h3>
+            <div id="logs" class="log">Ready to test...</div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://kvtkpguwoaqokcylzpic.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dGtwZ3V3b2Fxb2tjeWx6cGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTY0NDgsImV4cCI6MjA2MzU3MjQ0OH0.tmAmsWiqhJn4ceG3d_-RpXt7oSMNpcTUOei-igqu1Ps';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logs.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = 'Logs cleared...';
+            document.getElementById('profile').style.display = 'none';
+        }
+        
+        function setLoading(loading) {
+            const buttons = ['loginBtn', 'signupBtn', 'sessionBtn', 'logoutBtn'];
+            buttons.forEach(id => {
+                document.getElementById(id).disabled = loading;
+            });
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            log('🔄 Attempting login...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log(`❌ Login failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Login successful!', 'success');
+                    log(`📧 User email: ${data.user.email}`, 'success');
+                    await fetchUserProfile(data.user.id);
+                }
+            } catch (err) {
+                log(`❌ Login error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function testSignup() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                log('❌ Please enter email and password', 'error');
+                return;
+            }
+            
+            setLoading(true);
+            log('🔄 Attempting signup...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log(`❌ Signup failed: ${error.message}`, 'error');
+                } else {
+                    log('✅ Signup successful!', 'success');
+                    if (data.user) {
+                        log(`📧 User email: ${data.user.email}`, 'success');
+                        log('📬 Check your email for confirmation', 'info');
+                    }
+                }
+            } catch (err) {
+                log(`❌ Signup error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function testSession() {
+            setLoading(true);
+            log('🔄 Checking current session...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`❌ Session error: ${error.message}`, 'error');
+                } else if (data.session) {
+                    log('✅ Active session found!', 'success');
+                    log(`📧 User: ${data.session.user.email}`, 'success');
+                    await fetchUserProfile(data.session.user.id);
+                } else {
+                    log('ℹ️ No active session', 'info');
+                    document.getElementById('profile').style.display = 'none';
+                }
+            } catch (err) {
+                log(`❌ Session check error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function fetchUserProfile(userId) {
+            log('🔄 Fetching user profile...', 'info');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (error) {
+                    log(`❌ Profile fetch error: ${error.message}`, 'error');
+                    if (error.code === 'PGRST116') {
+                        log('ℹ️ No profile found - user may need to complete onboarding', 'info');
+                    }
+                } else {
+                    log('✅ Profile loaded successfully!', 'success');
+                    displayProfile(data);
+                }
+            } catch (err) {
+                log(`❌ Profile fetch error: ${err.message}`, 'error');
+            }
+        }
+        
+        function displayProfile(profile) {
+            const profileDiv = document.getElementById('profile');
+            const profileData = document.getElementById('profileData');
+            
+            profileData.innerHTML = `
+                <p><strong>ID:</strong> ${profile.id}</p>
+                <p><strong>Email:</strong> ${profile.email || 'Not set'}</p>
+                <p><strong>User Type:</strong> ${profile.user_type || 'Not set'}</p>
+                <p><strong>Profile Completed:</strong> ${profile.profile_completed ? 'Yes' : 'No'}</p>
+                <p><strong>Onboarding Completed:</strong> ${profile.onboarding_completed ? 'Yes' : 'No'}</p>
+            `;
+            
+            profileDiv.style.display = 'block';
+            
+            log(`👤 User Type: ${profile.user_type}`, 'success');
+            log(`✅ Profile Complete: ${profile.profile_completed}`, 'success');
+        }
+        
+        async function testLogout() {
+            setLoading(true);
+            log('🔄 Logging out...', 'info');
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) {
+                    log(`❌ Logout error: ${error.message}`, 'error');
+                } else {
+                    log('✅ Logged out successfully!', 'success');
+                    document.getElementById('profile').style.display = 'none';
+                }
+            } catch (err) {
+                log(`❌ Logout error: ${err.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        // Test connection on page load
+        window.onload = function() {
+            log('🚀 Debug tool loaded', 'success');
+            log('🔧 Supabase URL: ' + supabaseUrl, 'info');
+            log('🔧 Testing connection...', 'info');
+            testSession();
+        };
+    </script>
+</body>
+</html>
