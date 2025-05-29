@@ -81,11 +81,6 @@
   "github": {
     "silent": true
   },
-  "functions": {
-    "src/pages/api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "env": {
     "VITE_NODE_ENV": "production"
   }
