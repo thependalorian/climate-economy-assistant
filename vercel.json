@@ -1,12 +1,7 @@
 {
   "version": 2,
-  "build": {
-    "env": {
-      "VITE_ENVIRONMENT": "production",
-      "VITE_APP_URL": "https://cea.georgenekwaya.com"
-    }
-  },
-  "outputDirectory": "dist",
+  "cleanUrls": false,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/(.*)",
@@ -53,7 +48,5 @@
         }
       ]
     }
-  ],
-  "trailingSlash": false,
-  "cleanUrls": true
+  ]
 } 
