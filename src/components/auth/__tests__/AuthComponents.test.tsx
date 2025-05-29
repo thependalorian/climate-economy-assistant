@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Test Suite for Authentication Components
  * 

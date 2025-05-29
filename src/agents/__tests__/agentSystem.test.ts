@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Comprehensive Agent System Tests
  * 

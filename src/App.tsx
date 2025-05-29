@@ -68,7 +68,7 @@ export function App() {
     return () => clearTimeout(startupTimer);
   }, []);
 
-  if (loading) {
+  if (loading || appLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -219,8 +219,6 @@ export function App() {
             </ProtectedRoute>
           }
         />
-
-
 
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />

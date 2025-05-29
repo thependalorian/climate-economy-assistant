@@ -7,11 +7,15 @@
       "VITE_APP_URL": "https://cea.georgenekwaya.com"
     }
   },
-
+  "buildCommand": "vite build",
+  "framework": "vite",
+  "installCommand": "npm install",
+  "devCommand": "vite",
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "redirects": [
@@ -76,5 +80,13 @@
   "cleanUrls": true,
   "github": {
     "silent": true
+  },
+  "functions": {
+    "src/pages/api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "env": {
+    "VITE_NODE_ENV": "production"
   }
 } 
