@@ -7,6 +7,7 @@ import { AuthCallback } from './components/auth/AuthCallback';
 import { SimpleRedirect } from './components/auth/SimpleRedirect';
 import { AuthRedirect } from './components/auth/AuthRedirect';
 import { useAuth } from './hooks/useAuth';
+import { UserType } from './types/auth';
 
 // Development utilities - only loaded in development
 if (import.meta.env.DEV) {
@@ -43,6 +44,7 @@ import { JobSeekerStep1, JobSeekerStep2, JobSeekerStep3, JobSeekerStep4, JobSeek
 
 export function App() {
   const { user, loading } = useAuth();
+  const [appLoading, setAppLoading] = React.useState(false);
 
   // Enhanced logging with tracing
   console.log('🚀 App: Rendering with loading:', loading, 'user:', user ? 'logged in' : 'not logged in');
@@ -58,21 +60,13 @@ export function App() {
 
   // Add timeout for loading state to prevent infinite loading
   React.useEffect(() => {
-    if (loading) {
-      const timeout = setTimeout(() => {
-        console.warn('⏰ App: Loading timeout reached - this might indicate an auth issue');
-        console.log('🔄 App: Current path:', window.location.pathname);
+    setAppLoading(true);
+    const startupTimer = setTimeout(() => {
+      setAppLoading(false);
+    }, 1000);
 
-        // If we're on an onboarding page and still loading after 10 seconds, redirect to login
-        if (window.location.pathname.includes('/onboarding/')) {
-          console.log('🔄 App: Forcing redirect to login due to loading timeout');
-          window.location.href = '/login';
-        }
-      }, 10000); // 10 second timeout
-
-      return () => clearTimeout(timeout);
-    }
-  }, [loading]);
+    return () => clearTimeout(startupTimer);
+  }, []);
 
   if (loading) {
     return (
@@ -100,7 +94,7 @@ export function App() {
           path="onboarding/partner/step2"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <PartnerStep2 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -110,7 +104,7 @@ export function App() {
           path="onboarding/partner/step3"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <PartnerStep3 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -120,7 +114,7 @@ export function App() {
           path="onboarding/partner/step4"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <PartnerStep4 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -131,7 +125,7 @@ export function App() {
           path="onboarding/job-seeker/step1"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <JobSeekerStep1 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -141,7 +135,7 @@ export function App() {
           path="onboarding/job-seeker/step2"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <JobSeekerStep2 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -151,7 +145,7 @@ export function App() {
           path="onboarding/job-seeker/step3"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <JobSeekerStep3 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -161,7 +155,7 @@ export function App() {
           path="onboarding/job-seeker/step4"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <JobSeekerStep4 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -171,7 +165,7 @@ export function App() {
           path="onboarding/job-seeker/step5"
           element={
             <AuthRedirect>
-              <ProtectedRoute isAuthenticated={!!user} allowWithoutProfile={true}>
+              <ProtectedRoute allowWithoutProfile={true}>
                 <JobSeekerStep5 />
               </ProtectedRoute>
             </AuthRedirect>
@@ -190,7 +184,7 @@ export function App() {
         <Route
           path="dashboard"
           element={
-            <ProtectedRoute isAuthenticated={!!user} requiredRole="job_seeker">
+            <ProtectedRoute requiredRole={UserType.JobSeeker}>
               <DashboardPage />
             </ProtectedRoute>
           }
@@ -208,9 +202,9 @@ export function App() {
 
         {/* Partner Dashboard routes */}
         <Route
-          path="partner-dashboard/*"
+          path="partner-dashboard"
           element={
-            <ProtectedRoute isAuthenticated={!!user} requiredRole="partner">
+            <ProtectedRoute requiredRole={UserType.Partner}>
               <PartnerDashboard />
             </ProtectedRoute>
           }
@@ -218,9 +212,9 @@ export function App() {
 
         {/* Admin Dashboard routes */}
         <Route
-          path="admin-dashboard/*"
+          path="admin"
           element={
-            <ProtectedRoute isAuthenticated={!!user} requiredRole="admin">
+            <ProtectedRoute requiredRole={UserType.Admin}>
               <AdminDashboard />
             </ProtectedRoute>
           }

@@ -1,12 +1,16 @@
 import React from 'react';
-import { DivideIcon as LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface StatsCardProps {
   title: string;
-  value: number;
+  value: string | number;
   subtext: string;
   icon: LucideIcon;
   color: 'primary' | 'secondary' | 'success';
+  trend?: {
+    value: number;
+    isUp: boolean;
+  };
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({

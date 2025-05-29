@@ -26,4 +26,23 @@ export default defineConfig({
     // Ensure environment variables are available
     'process.env.VITE_APP_URL': JSON.stringify(process.env.VITE_APP_URL || 'http://localhost:3000'),
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@headlessui/react', 'lucide-react'],
+        }
+      }
+    }
+  }
 });
