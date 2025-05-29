@@ -1,0 +1,17 @@
+{
+  "imports": {
+    "@langchain/langgraph": "npm:@langchain/langgraph@^0.2.0",
+    "@langchain/openai": "npm:@langchain/openai@^0.3.0",
+    "@langchain/community/tools/duckduckgo_search": "npm:@langchain/community@^0.3.0/tools/duckduckgo_search",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.45.0",
+    "std/http/server.ts": "https://deno.land/std@0.168.0/http/server.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-env index.ts"
+  }
+} 

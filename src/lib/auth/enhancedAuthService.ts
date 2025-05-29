@@ -2,27 +2,40 @@
  * Enhanced Authentication Service
  * 
  * Production-ready authentication with:
- * - OTP email verification
+ * - OTP email verification with hashed storage
  * - Multi-factor authentication (MFA)
  * - Secure onboarding flow
  * - Rate limiting and security monitoring
- * - Password management
+ * - Enhanced password management
  */
 
 import { supabase } from '../supabase';
 import { 
   validatePassword, 
-  generateOTP, 
   checkRateLimit, 
   logSecurityEvent,
   validateEmail
-  // generatePasswordResetToken,
-  // verifyPasswordResetToken
 } from '../security/userSecurity';
+import { 
+  generateSecureOTP,
+  storeSecureOTP,
+  verifySecureOTP,
+  OTPType
+} from '../security/otpSecurity';
 import { createUserProfile, createJobSeekerProfile, createPartnerProfile } from '../profileService';
 import { recordUserConsent } from '../userManagement/userDataService';
+import { sendOTPEmail, sendWelcomeEmail } from '../email/emailService';
 import type { CreateUserProfileData } from '../../types/unified';
+import { 
+  type EnhancedRegistrationData,
+  type EnhancedOTPVerification,
+  type EnhancedAuthResult,
+  type PasswordResetData,
+  UserType,
+  OrganizationType
+} from '../../types/auth';
 
+// Legacy interfaces for backward compatibility
 export interface RegistrationData {
   email: string;
   password: string;
@@ -69,10 +82,10 @@ export interface MFASetup {
  * Register new user with comprehensive security checks
  */
 export async function registerUser(
-  registrationData: RegistrationData,
+  registrationData: EnhancedRegistrationData,
   ipAddress: string,
   userAgent: string
-): Promise<AuthResult> {
+): Promise<EnhancedAuthResult> {
   try {
     console.log('🔄 Starting user registration process');
 
@@ -116,7 +129,11 @@ export async function registerUser(
 
     if (authError || !authData.user) {
       console.error('Auth user creation failed:', authError);
-      return { success: false, error: 'Failed to create account. Please try again.' };
+      // Provide more specific error message if available
+      const errorMessage = authError?.message?.includes('already registered') 
+        ? 'An account with this email already exists'
+        : authError?.message || 'Failed to create account. Please try again.';
+      return { success: false, error: errorMessage };
     }
 
     const userId = authData.user.id;
@@ -129,7 +146,7 @@ export async function registerUser(
       first_name: registrationData.firstName,
       last_name: registrationData.lastName,
       organization_name: registrationData.organizationName,
-      organization_type: registrationData.organizationType as 'employer' | 'training_provider' | 'educational_institution' | 'government_agency' | 'nonprofit' | 'industry_association' | undefined
+      organization_type: registrationData.organizationType
     };
 
     const profileResult = await createUserProfile(profileData);
@@ -140,13 +157,13 @@ export async function registerUser(
     }
 
     // Create type-specific profile
-    if (registrationData.userType === 'job_seeker') {
+    if (registrationData.userType === UserType.JobSeeker) {
       await createJobSeekerProfile(userId);
-    } else if (registrationData.userType === 'partner' && registrationData.organizationName && registrationData.organizationType) {
+    } else if (registrationData.userType === UserType.Partner && registrationData.organizationName && registrationData.organizationType) {
       await createPartnerProfile(
         userId, 
         registrationData.organizationName, 
-        registrationData.organizationType as 'employer' | 'training_provider' | 'educational_institution' | 'government_agency' | 'nonprofit' | 'industry_association'
+        registrationData.organizationType
       );
     }
 
@@ -158,7 +175,13 @@ export async function registerUser(
     }
 
     // Generate and send OTP for email verification
-    const otpResult = await generateAndSendOTP(registrationData.email, 'registration', ipAddress, userAgent);
+    const otpResult = await generateAndSendSecureOTP(
+      userId,
+      registrationData.email, 
+      OTPType.Registration, 
+      ipAddress, 
+      userAgent
+    );
     if (!otpResult.success) {
       return { success: false, error: 'Failed to send verification email' };
     }
@@ -234,7 +257,7 @@ export async function loginUser(
     // Check if email is verified
     if (!data.user.email_confirmed_at) {
       // Generate new OTP for email verification
-      await generateAndSendOTP(loginData.email, 'registration', ipAddress, userAgent);
+      await generateAndSendSecureOTP(userId, loginData.email, OTPType.Registration, ipAddress, userAgent);
       return { 
         success: false, 
         error: 'Please verify your email address. A new verification code has been sent.',
@@ -246,7 +269,7 @@ export async function loginUser(
     const mfaRequired = await checkMFARequired(userId);
     if (mfaRequired) {
       // Generate and send MFA OTP
-      await generateAndSendOTP(loginData.email, 'login_mfa', ipAddress, userAgent);
+      await generateAndSendSecureOTP(userId, loginData.email, OTPType.LoginMFA, ipAddress, userAgent);
       return {
         success: true,
         user: data.user,
@@ -275,50 +298,54 @@ export async function loginUser(
 }
 
 /**
- * Verify OTP code
+ * Verify OTP code with enhanced security
  */
 export async function verifyOTP(
-  verification: OTPVerification,
+  verification: EnhancedOTPVerification,
   ipAddress: string,
   userAgent: string
-): Promise<AuthResult> {
+): Promise<EnhancedAuthResult> {
   try {
-    console.log('🔄 Verifying OTP');
+    console.log('🔄 Verifying OTP with enhanced security');
 
-    // Get stored OTP
-    const { data: otpRecord, error } = await supabase
-      .from('otp_codes')
-      .select('*')
-      .eq('email', verification.email)
-      .eq('code', verification.otp)
-      .eq('type', verification.type)
-      .eq('used', false)
-      .gte('expires_at', new Date().toISOString())
-      .single();
+    // Use the secure OTP verification
+    const otpResult = await verifySecureOTP(
+      verification.email,
+      verification.otp,
+      verification.type
+    );
 
-    if (error || !otpRecord) {
+    if (!otpResult.success) {
       await logSecurityEvent(
         verification.email,
         'login_failed',
         ipAddress,
         userAgent,
-        { error: 'Invalid OTP', type: verification.type },
+        { error: otpResult.error, type: verification.type },
         'medium'
       );
-      return { success: false, error: 'Invalid or expired verification code' };
+      
+      return { 
+        success: false, 
+        error: otpResult.error,
+        attemptsRemaining: otpResult.attemptsRemaining,
+        isLocked: otpResult.isLocked
+      };
     }
 
-    // Mark OTP as used
-    await supabase
-      .from('otp_codes')
-      .update({ used: true })
-      .eq('id', otpRecord.id);
-
     // Handle different OTP types
-    if (verification.type === 'registration') {
+    if (verification.type === OTPType.Registration) {
+      // Get user ID for email confirmation
+      const { data: allUsers } = await supabase.auth.admin.listUsers();
+      const userData = allUsers.users?.find(user => user.email === verification.email);
+      
+      if (!userData) {
+        return { success: false, error: 'User not found' };
+      }
+
       // Confirm email for registration
       const { error: confirmError } = await supabase.auth.admin.updateUserById(
-        otpRecord.user_id,
+        userData.id,
         { email_confirm: true }
       );
 
@@ -326,8 +353,26 @@ export async function verifyOTP(
         return { success: false, error: 'Failed to confirm email' };
       }
 
+      // Send welcome email
+      const userProfile = await supabase
+        .from('user_profiles')
+        .select('first_name, user_type')
+        .eq('id', userData.id)
+        .single();
+
+      if (userProfile.data) {
+        const welcomeResult = await sendWelcomeEmail(
+          verification.email,
+          userProfile.data.first_name || 'User',
+          userProfile.data.user_type
+        );
+        if (!welcomeResult.success) {
+          console.warn('Failed to send welcome email:', welcomeResult.error);
+        }
+      }
+
       await logSecurityEvent(
-        otpRecord.user_id,
+        userData.id,
         'login_success',
         ipAddress,
         userAgent,
@@ -347,45 +392,40 @@ export async function verifyOTP(
 }
 
 /**
- * Generate and send OTP code
+ * Generate and send secure OTP code
  */
-export async function generateAndSendOTP(
+export async function generateAndSendSecureOTP(
+  userId: string,
   email: string,
-  type: 'registration' | 'password_reset' | 'login_mfa',
+  type: OTPType,
   ipAddress: string,
-  userAgent: string
+  userAgent: string,
+  expirationMinutes: number = 10
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Get user ID
-    const { data: allUsers } = await supabase.auth.admin.listUsers();
-    const userData = allUsers.users?.find(user => user.email === email);
-    if (!userData) {
-      return { success: false, error: 'User not found' };
+    // Generate secure OTP
+    const otp = generateSecureOTP(6);
+    
+    // Store OTP securely with hash
+    const storeResult = await storeSecureOTP(
+      userId,
+      email,
+      otp,
+      type,
+      ipAddress,
+      userAgent,
+      expirationMinutes
+    );
+
+    if (!storeResult.success) {
+      return storeResult;
     }
 
-    const userId = userData.id;
-    const otp = generateOTP(6);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Store OTP in database
-    const { error } = await supabase
-      .from('otp_codes')
-      .insert({
-        user_id: userId,
-        email,
-        code: otp,
-        type,
-        expires_at: expiresAt.toISOString(),
-        used: false
-      });
-
-    if (error) {
-      console.error('Failed to store OTP:', error);
-      return { success: false, error: 'Failed to generate verification code' };
+    // Send OTP via email
+    const emailResult = await sendOTPEmail(email, otp, type);
+    if (!emailResult.success) {
+      return { success: false, error: 'Failed to send verification email' };
     }
-
-    // Send OTP via email (implementation depends on your email service)
-    await sendOTPEmail(email, otp, type);
 
     // Log OTP generation
     await logSecurityEvent(
@@ -399,7 +439,7 @@ export async function generateAndSendOTP(
 
     return { success: true };
   } catch (err) {
-    console.error('OTP generation failed:', err);
+    console.error('Secure OTP generation failed:', err);
     return { success: false, error: 'Failed to send verification code' };
   }
 }
@@ -428,7 +468,7 @@ export async function requestPasswordReset(
     }
 
     // Generate and send OTP
-    const result = await generateAndSendOTP(email, 'password_reset', ipAddress, userAgent);
+    const result = await generateAndSendSecureOTP(userData.id, email, OTPType.PasswordReset, ipAddress, userAgent);
     return result;
 
   } catch (err) {
@@ -438,38 +478,49 @@ export async function requestPasswordReset(
 }
 
 /**
- * Reset password with OTP
+ * Complete password reset with OTP verification
  */
-export async function resetPassword(
-  email: string,
-  otp: string,
-  newPassword: string,
+export async function resetPasswordWithOTP(
+  resetData: PasswordResetData,
   ipAddress: string,
   userAgent: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Validate new password
-    const passwordValidation = validatePassword(newPassword);
+    const passwordValidation = validatePassword(resetData.newPassword);
     if (!passwordValidation.isValid) {
       return { success: false, error: passwordValidation.errors.join(', ') };
     }
 
+    // Check password confirmation
+    if (resetData.newPassword !== resetData.confirmPassword) {
+      return { success: false, error: 'Passwords do not match' };
+    }
+
     // Verify OTP
-    const otpResult = await verifyOTP({ email, otp, type: 'password_reset' }, ipAddress, userAgent);
+    const otpResult = await verifySecureOTP(
+      resetData.email,
+      resetData.otp,
+      OTPType.PasswordReset
+    );
+
     if (!otpResult.success) {
-      return { success: false, error: otpResult.error };
+      return { 
+        success: false, 
+        error: otpResult.error || 'Invalid verification code'
+      };
     }
 
     // Get user
     const { data: allUsers } = await supabase.auth.admin.listUsers();
-    const userData = allUsers.users?.find(user => user.email === email);
+    const userData = allUsers.users?.find(user => user.email === resetData.email);
     if (!userData) {
       return { success: false, error: 'User not found' };
     }
 
     // Update password
     const { error } = await supabase.auth.admin.updateUserById(userData.id, {
-      password: newPassword
+      password: resetData.newPassword
     });
 
     if (error) {
@@ -516,9 +567,9 @@ export async function setupMFA(userId: string): Promise<{ success: boolean; setu
 }
 
 /**
- * Validate registration data
+ * Validate registration data with enhanced checks
  */
-function validateRegistrationData(data: RegistrationData): { isValid: boolean; errors: string[] } {
+function validateRegistrationData(data: EnhancedRegistrationData): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   // Email validation
@@ -539,8 +590,8 @@ function validateRegistrationData(data: RegistrationData): { isValid: boolean; e
   }
 
   // Required fields
-  if (!data.userType) {
-    errors.push('User type is required');
+  if (!Object.values(UserType).includes(data.userType)) {
+    errors.push('Invalid user type');
   }
 
   if (!data.acceptedTerms) {
@@ -552,12 +603,12 @@ function validateRegistrationData(data: RegistrationData): { isValid: boolean; e
   }
 
   // Partner-specific validation
-  if (data.userType === 'partner') {
+  if (data.userType === UserType.Partner) {
     if (!data.organizationName) {
       errors.push('Organization name is required for partners');
     }
-    if (!data.organizationType) {
-      errors.push('Organization type is required for partners');
+    if (!data.organizationType || !Object.values(OrganizationType).includes(data.organizationType)) {
+      errors.push('Valid organization type is required for partners');
     }
   }
 
@@ -582,19 +633,4 @@ async function checkMFARequired(userId: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/**
- * Send OTP email using the email service
- */
-async function sendOTPEmail(email: string, otp: string, type: string): Promise<void> {
-  const { sendOTPEmail: sendEmail } = await import('../email/emailService');
-  
-  const result = await sendEmail(email, otp, type as 'registration' | 'password_reset' | 'login_mfa');
-  
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to send OTP email');
-  }
-  
-  console.log(`✅ OTP email sent successfully to ${email}`);
 }

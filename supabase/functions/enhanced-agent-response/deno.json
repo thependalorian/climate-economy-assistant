@@ -1,0 +1,14 @@
+{
+  "importMap": "./import_map.json",
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --allow-read index.ts",
+    "serve": "deno run --allow-net --allow-env --allow-read --allow-write index.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "lock": false,
+  "nodeModulesDir": false
+} 

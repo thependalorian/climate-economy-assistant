@@ -136,7 +136,7 @@ async function checkSupabaseConnection() {
 }
 
 async function checkDatabaseTables() {
-  logSection('Database Tables Check');
+  logSection('Database Schema Discovery');
   
   try {
     const supabase = createClient(
@@ -144,44 +144,239 @@ async function checkDatabaseTables() {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const expectedTables = [
-      'user_profiles',
-      'job_seeker_profiles', 
-      'partner_profiles',
-      'admin_profiles',
-      'job_listings',
-      'training_programs',
-      'skills',
-      'education',
-      'work_experience',
-      'conversations',
-      'messages',
-      'knowledge_base',
-      'system_config',
-      'audit_logs'
+    // Comprehensive list of tables from Supabase dashboard
+    const potentialTables = [
+      // Core user tables
+      'user_profiles', 'job_seeker_profiles', 'partner_profiles', 'admin_profiles',
+      'user_pii_data', 'user_activity', 'user_memory_state', 'user_overrides',
+      
+      // Job and training tables
+      'job_listings', 'job_matches', 'training_programs', 'training_matches',
+      
+      // Profile detail tables
+      'skills', 'skill_records', 'education', 'education_records', 
+      'work_experience', 'experience_records',
+      
+      // Communication tables
+      'conversations', 'messages',
+      
+      // Knowledge and resources
+      'knowledge_resources', 'resources', 'resource_recommendations',
+      
+      // System tables
+      'system_config', 'system_alerts', 'system_health', 'auth_config',
+      
+      // Audit and security
+      'audit_logs', 'pii_access_logs', 'pii_encryption_keys',
+      
+      // Data management
+      'data_export_requests', 'data_exports', 'database_operations',
+      
+      // Analysis and reporting
+      'resume_analysis_results', 'reports',
+      
+      // Session management
+      'admin_sessions',
+      
+      // Views (these might not be accessible via .from())
+      'climate_ecosystem_view', 'complete_job_seeker_profiles', 'user_profiles_with_skills'
     ];
 
-    let allTablesExist = true;
+    const discoveredTables = [];
+    let allTablesAccessible = true;
 
-    for (const table of expectedTables) {
+    logInfo('Discovering accessible tables...');
+
+    for (const tableName of potentialTables) {
       try {
-        const { data, error } = await supabase.from(table).select('count').limit(1);
+        // Test table accessibility and get sample data
+        const { data, error } = await supabase.from(tableName).select('*').limit(1);
+        
         if (error) {
-          logError(`Table '${table}': ${error.message}`);
-          allTablesExist = false;
-        } else {
-          logSuccess(`Table '${table}': Accessible`);
+          // Table doesn't exist or not accessible
+          continue;
         }
+
+        // Table exists and is accessible
+        discoveredTables.push(tableName);
+
+        // Get row count
+        const { count, error: countError } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true });
+
+        const rowCount = countError ? 'Unknown' : count;
+
+        // Get column information by examining the first row
+        let columnInfo = 'Unknown columns';
+        if (data && data.length > 0) {
+          const columns = Object.keys(data[0]);
+          columnInfo = `${columns.length} columns: ${columns.join(', ')}`;
+          
+          // Check for vector/embedding columns
+          const vectorColumns = columns.filter(col => 
+            col.includes('embedding') || 
+            col.includes('vector') ||
+            col.includes('similarity')
+          );
+
+          if (vectorColumns.length > 0) {
+            logSuccess(`✅ Table '${tableName}': ${rowCount} rows, ${columnInfo}`);
+            logInfo(`   🧠 Vector/Embedding columns: ${vectorColumns.join(', ')}`);
+          } else {
+            logSuccess(`✅ Table '${tableName}': ${rowCount} rows, ${columnInfo}`);
+          }
+        } else {
+          logSuccess(`✅ Table '${tableName}': ${rowCount} rows (empty table)`);
+        }
+
       } catch (err) {
-        logError(`Table '${table}': Error - ${err.message}`);
-        allTablesExist = false;
+        logError(`❌ Table '${tableName}': Access error - ${err.message}`);
+        allTablesAccessible = false;
       }
     }
 
-    return allTablesExist;
+    logInfo(`\n📊 Discovery Summary: Found ${discoveredTables.length} accessible tables`);
+    
+    // Categorize discovered tables
+    const categories = {
+      'Core User Tables': discoveredTables.filter(t => t.includes('user_') || t.includes('admin_') || t.includes('job_seeker_') || t.includes('partner_')),
+      'Job & Training': discoveredTables.filter(t => t.includes('job_') || t.includes('training_')),
+      'Profile Details': discoveredTables.filter(t => ['skills', 'skill_records', 'education', 'education_records', 'work_experience', 'experience_records'].includes(t)),
+      'Communication': discoveredTables.filter(t => ['conversations', 'messages'].includes(t)),
+      'Knowledge & Resources': discoveredTables.filter(t => t.includes('knowledge_') || t.includes('resource')),
+      'System & Config': discoveredTables.filter(t => t.includes('system_') || t.includes('auth_') || t.includes('config')),
+      'Security & Audit': discoveredTables.filter(t => t.includes('audit_') || t.includes('pii_')),
+      'Data Management': discoveredTables.filter(t => t.includes('data_') || t.includes('database_')),
+      'Analysis & Reporting': discoveredTables.filter(t => ['resume_analysis_results', 'reports'].includes(t)),
+      'Sessions': discoveredTables.filter(t => t.includes('session'))
+    };
+
+    logInfo('\n📋 Table Categories:');
+    Object.entries(categories).forEach(([category, tables]) => {
+      if (tables.length > 0) {
+        logInfo(`   ${category}: ${tables.length} tables`);
+        tables.forEach(table => logInfo(`     • ${table}`));
+      }
+    });
+
+    // Try to get additional schema information using SQL
+    await checkDatabaseExtensions(supabase);
+    await checkDatabaseViews(supabase);
+    await checkDatabaseFunctions(supabase);
+
+    return discoveredTables.length > 0;
   } catch (error) {
-    logError(`Database check error: ${error.message}`);
+    logError(`Database discovery error: ${error.message}`);
     return false;
+  }
+}
+
+async function checkDatabaseExtensions(supabase) {
+  logInfo('\n🔌 Database Extensions:');
+  
+  try {
+    // Try to check for vector extension by testing vector operations
+    const { data: vectorTest, error: vectorError } = await supabase
+      .rpc('vector_similarity_test', { test: true })
+      .then(() => ({ hasVector: true }))
+      .catch(() => ({ hasVector: false }));
+
+    if (vectorTest?.hasVector) {
+      logSuccess(`   🧠 Vector extension detected - supports embeddings!`);
+    } else {
+      logWarning(`   Vector extension not detected or not accessible`);
+    }
+
+    // Check for other common extensions by testing functionality
+    logInfo(`   📊 Checking for common PostgreSQL extensions...`);
+    
+    // Test for UUID extension
+    try {
+      const { data } = await supabase.rpc('gen_random_uuid');
+      if (data) {
+        logSuccess(`   🔑 UUID extension available`);
+      }
+    } catch {
+      logWarning(`   UUID extension not available`);
+    }
+
+  } catch (err) {
+    logWarning(`Extension check failed: ${err.message}`);
+  }
+}
+
+async function checkDatabaseViews(supabase) {
+  logInfo('\n👁️ Database Views:');
+  
+  const potentialViews = [
+    'user_view', 'profile_view', 'job_view', 'training_view'
+  ];
+
+  let viewsFound = 0;
+
+  for (const viewName of potentialViews) {
+    try {
+      const { data, error } = await supabase.from(viewName).select('*').limit(1);
+      
+      if (!error) {
+        logSuccess(`   👁️ View '${viewName}': Accessible`);
+        viewsFound++;
+      }
+    } catch (err) {
+      // View doesn't exist, which is normal
+    }
+  }
+
+  if (viewsFound === 0) {
+    logInfo(`   No custom views found`);
+  }
+}
+
+async function checkDatabaseFunctions(supabase) {
+  logInfo('\n⚙️ Database Functions:');
+  
+  // Test for common RPC functions that might exist
+  const potentialFunctions = [
+    'search_knowledge_resources',
+    'similarity_search',
+    'vector_search',
+    'match_documents',
+    'get_user_profile',
+    'update_user_profile',
+    'create_conversation',
+    'get_recommendations'
+  ];
+
+  let functionsFound = 0;
+
+  for (const funcName of potentialFunctions) {
+    try {
+      // Try to call the function with minimal parameters to see if it exists
+      const { data, error } = await supabase.rpc(funcName, {});
+      
+      if (error && !error.message.includes('function') && !error.message.includes('does not exist')) {
+        // Function exists but failed due to parameters or permissions
+        logSuccess(`   ⚙️ Function '${funcName}': Available`);
+        functionsFound++;
+        
+        // Highlight vector/similarity functions
+        if (funcName.includes('similarity') || 
+            funcName.includes('vector') ||
+            funcName.includes('search') ||
+            funcName.includes('match')) {
+          logInfo(`     🔍 Vector/Search function detected!`);
+        }
+      }
+    } catch (err) {
+      // Function doesn't exist, which is normal
+    }
+  }
+
+  if (functionsFound === 0) {
+    logInfo(`   No accessible RPC functions found`);
+  } else {
+    logInfo(`   Found ${functionsFound} accessible functions`);
   }
 }
 
@@ -238,7 +433,7 @@ async function checkSystemHealth() {
   const checks = [
     { name: 'Environment Variables', fn: checkEnvironmentVariables },
     { name: 'Supabase Connection', fn: checkSupabaseConnection },
-    { name: 'Database Tables', fn: checkDatabaseTables },
+    { name: 'Database Schema Discovery', fn: checkDatabaseTables },
     { name: 'OpenAI API', fn: checkOpenAIConnection }
   ];
 

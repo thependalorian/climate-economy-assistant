@@ -294,8 +294,8 @@ async function testResumeAnalysis(scenario) {
     // Call the LangGraph resume processing function
     const { data, error } = await supabase.functions.invoke('langgraph-process-resume', {
       body: {
-        user_id: `test-${scenario.id}`,
-        resume_text: scenario.resume_text
+        userId: `test-${scenario.id}`,
+        resumeText: scenario.resume_text
       }
     });
 
@@ -345,14 +345,9 @@ async function testAgentConversation(scenario, resumeData) {
       // Call the LangGraph agent response function
       const { data, error } = await supabase.functions.invoke('langgraph-agent-response', {
         body: {
-          user_id: userId,
-          conversation_id: conversationId,
-          messages: messages,
-          user_message: query,
-          user_context: {
-            profile: scenario.profile,
-            resume_analysis: resumeData
-          }
+          message: query,
+          userId: userId,
+          threadId: conversationId
         }
       });
 
@@ -398,14 +393,9 @@ async function testSkillsTranslation(scenario) {
     try {
       const { data, error } = await supabase.functions.invoke('langgraph-agent-response', {
         body: {
-          user_id: `test-${scenario.id}`,
-          conversation_id: `skills-test-${Date.now()}`,
-          messages: [{ role: 'user', content: query }],
-          user_message: query,
-          user_context: {
-            profile: scenario.profile,
-            focus: 'skills_translation'
-          }
+          message: query,
+          userId: `test-${scenario.id}`,
+          threadId: `skills-test-${Date.now()}`
         }
       });
 
@@ -448,13 +438,9 @@ async function testKnowledgeBaseIntegration() {
     try {
       const { data, error } = await supabase.functions.invoke('langgraph-agent-response', {
         body: {
-          user_id: 'test-knowledge',
-          conversation_id: `knowledge-test-${Date.now()}`,
-          messages: [{ role: 'user', content: query }],
-          user_message: query,
-          user_context: {
-            focus: 'knowledge_base'
-          }
+          message: query,
+          userId: 'test-knowledge',
+          threadId: `knowledge-test-${Date.now()}`
         }
       });
 

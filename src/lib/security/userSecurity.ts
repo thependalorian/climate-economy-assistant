@@ -314,7 +314,7 @@ async function alertSecurityTeam(event: Omit<SecurityEvent, 'id' | 'created_at'>
  * Encrypt sensitive PII data
  */
 export function encryptPII(data: string, key?: string): string {
-  const encryptionKey = key || process.env.PII_ENCRYPTION_KEY || 'default-key-change-in-production';
+  const encryptionKey = key || import.meta.env.VITE_PII_ENCRYPTION_KEY || 'default-key-change-in-production';
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey.padEnd(32, '0').slice(0, 32)), iv);
   let encrypted = cipher.update(data, 'utf8', 'hex');
@@ -326,7 +326,7 @@ export function encryptPII(data: string, key?: string): string {
  * Decrypt sensitive PII data
  */
 export function decryptPII(encryptedData: string, key?: string): string {
-  const encryptionKey = key || process.env.PII_ENCRYPTION_KEY || 'default-key-change-in-production';
+  const encryptionKey = key || import.meta.env.VITE_PII_ENCRYPTION_KEY || 'default-key-change-in-production';
   const [ivHex, encrypted] = encryptedData.split(':');
   const iv = Buffer.from(ivHex, 'hex');
   const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encryptionKey.padEnd(32, '0').slice(0, 32)), iv);

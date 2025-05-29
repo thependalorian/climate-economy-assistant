@@ -88,7 +88,7 @@ class PIIEncryptionService {
   private getMasterKey(): string {
     // In production, this should come from a secure environment variable
     // For development, we'll use a default key (should be overridden in production)
-    const envKey = process.env.PII_ENCRYPTION_KEY || 
+    const envKey = import.meta.env.VITE_PII_ENCRYPTION_KEY || 
                    import.meta.env.VITE_PII_ENCRYPTION_KEY ||
                    'HsjEnZAMBE/jpf7dBrE2rhEsZ1gN1qUSd+xNICatkag='; // Generated key
 

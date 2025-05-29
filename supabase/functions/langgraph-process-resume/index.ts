@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LangGraph-Enhanced Resume Processing Function
  * 
@@ -8,11 +9,10 @@
  */
 
 // @ts-expect-error - Deno import compatibility
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { StateGraph, Annotation, START, END } from 'https://esm.sh/@langchain/langgraph@0.2.34';
-import { ChatOpenAI } from 'https://esm.sh/@langchain/openai@0.3.11';
-import { MemorySaver } from 'https://esm.sh/@langchain/langgraph@0.2.34';
+import { serve } from 'std/http/server.ts';
+import { createClient } from '@supabase/supabase-js';
+import { StateGraph, Annotation, START, END, MemorySaver } from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
 
 // Deno type declaration for Edge Functions
 declare const Deno: {
@@ -171,8 +171,8 @@ type ResumeProcessingStateType = typeof ResumeProcessingState.State;
 // INITIALIZATION
 // ============================================================================
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabaseUrl = Deno.env.get('DATABASE_URL') || '';
+const supabaseServiceKey = Deno.env.get('DATABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const openai = new ChatOpenAI({

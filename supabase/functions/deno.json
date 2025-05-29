@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["*.ts", "*.tsx", "*.js", "*.jsx"]
+    }
+  },
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "@langchain/langgraph": "https://esm.sh/@langchain/langgraph@0.2.34",
+    "@langchain/core": "https://esm.sh/@langchain/core@0.3.15",
+    "@langchain/openai": "https://esm.sh/@langchain/openai@0.3.11"
+  }
+} 
