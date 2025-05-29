@@ -7,11 +7,11 @@
       "VITE_APP_URL": "https://cea.georgenekwaya.com"
     }
   },
-  "buildCommand": "vite build",
-  "framework": "vite",
+  "buildCommand": "npm install && vite build",
   "installCommand": "npm install",
-  "devCommand": "vite",
+  "framework": null,
   "outputDirectory": "dist",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./ || exit 1",
   "rewrites": [
     {
       "source": "/(.*)",
