@@ -8,7 +8,7 @@
     "dev:local": "VITE_APP_URL=http://localhost:3000 vite",
     "dev:trace": "cross-env DEBUG=true VITE_TRACE_ENABLED=true VITE_VERBOSE=true VITE_APP_URL=https://cea.georgenekwaya.com vite --host --port 3000",
     "dev:quiet": "vite --port 3000",
-    "build": "vite build",
+    "build": "vite build --mode production",
     "build:prod": "vite build",
     "build:check": "tsc && vite build",
     "build:dev": "tsc && vite build",

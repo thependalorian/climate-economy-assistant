@@ -1,17 +1,12 @@
 {
   "version": 2,
-  "alias": ["cea.georgenekwaya.com"],
   "build": {
     "env": {
       "VITE_ENVIRONMENT": "production",
       "VITE_APP_URL": "https://cea.georgenekwaya.com"
     }
   },
-  "buildCommand": "npm install && vite build",
-  "installCommand": "npm install",
-  "framework": null,
   "outputDirectory": "dist",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./ || exit 1",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -77,11 +72,5 @@
     }
   ],
   "trailingSlash": false,
-  "cleanUrls": true,
-  "github": {
-    "silent": true
-  },
-  "env": {
-    "VITE_NODE_ENV": "production"
-  }
+  "cleanUrls": true
 } 
