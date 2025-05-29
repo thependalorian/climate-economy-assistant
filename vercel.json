@@ -13,23 +13,6 @@
       "destination": "/index.html"
     }
   ],
-  "redirects": [
-    {
-      "source": "/home",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/login",
-      "destination": "/auth/login",
-      "permanent": false
-    },
-    {
-      "source": "/register",
-      "destination": "/auth/register",
-      "permanent": false
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
