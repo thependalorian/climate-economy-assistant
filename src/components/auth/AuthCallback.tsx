@@ -181,8 +181,20 @@ export const AuthCallback = () => {
           userType = existingProfile.user_type as UserType;
           profileCompleted = existingProfile.profile_completed;
           firstName = existingProfile.first_name || firstName;
+          
+          console.log('🔍 AuthCallback: Profile data parsed:', {
+            userType,
+            profileCompleted,
+            firstName
+          });
         } else {
           console.log('🔄 AuthCallback: Creating new profile...');
+          console.log('🔍 AuthCallback: Using stored data for new profile:', {
+            storedUserType,
+            storedFirstName,
+            storedLastName,
+            storedOrganization
+          });
           
           // Create user profile with enhanced error handling
           const profileResult = await createUserProfile({
@@ -279,17 +291,23 @@ export const AuthCallback = () => {
 
         // Type-safe redirect logic
         const getRedirectPath = (type: UserType, completed: boolean): string => {
+          console.log('🔄 AuthCallback: getRedirectPath called with:', { type, completed });
+          
           if (type === UserType.Admin) {
             return '/admin-dashboard';
           } else if (type === UserType.Partner) {
             return completed ? '/partner-dashboard' : '/onboarding/partner/step1';
           } else if (type === UserType.JobSeeker) {
+            // Always redirect to onboarding step 1 if profile is not completed
+            // This ensures new users always go through the onboarding flow
             return completed ? '/dashboard' : '/onboarding/job-seeker/step1';
           }
-          return '/dashboard'; // Default fallback
+          
+          console.warn('⚠️ AuthCallback: Unknown user type, defaulting to onboarding');
+          return '/onboarding/job-seeker/step1'; // Default to job seeker onboarding
         };
 
-        const redirectPath = getRedirectPath(userType, profileCompleted);
+        const redirectPath = getRedirectPath(userType, profileCompleted || false);
 
         console.log('🔄 AuthCallback: Authentication flow completed successfully', {
           userId: user.id,
